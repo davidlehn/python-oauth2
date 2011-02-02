@@ -606,8 +606,8 @@ class TestRequest(unittest.TestCase, ReallyEqualMixin):
         expected = urllib.urlencode(sorted(params.items())).replace('+', '%20')
         self.assertEqual(expected, res)
 
-    @mock.patch('oauth2.Request.make_timestamp')
-    @mock.patch('oauth2.Request.make_nonce')
+    @mock.patch('oauth2.generate_timestamp')
+    @mock.patch('oauth2.generate_nonce')
     def test_request_nonutf8_bytes(self, mock_make_nonce, mock_make_timestamp):
         mock_make_nonce.return_value = 5
         mock_make_timestamp.return_value = 6
