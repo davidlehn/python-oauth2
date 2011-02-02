@@ -517,7 +517,7 @@ class Request(dict):
     def from_consumer_and_token(cls, consumer, token=None,
             http_method=HTTP_METHOD, http_url=None, parameters=None,
             body='', is_form_encoded=False):
-        if not parameters:
+        if parameters is None:
             parameters = {}
  
         defaults = {
