@@ -31,7 +31,7 @@ import hmac
 import binascii
 import httplib2
 
-from urlparse import parse_qs, parse_qsl
+from urlparse import parse_qs
 
 try:
     from hashlib import sha1
@@ -619,7 +619,7 @@ class Client(httplib2.Http):
 
         if is_form_encoded and body:
             parameters = parameters or {}
-            parameters.update(dict(parse_qsl(body)))
+            parameters.update(parse_qs(body))
 
         req = Request.from_consumer_and_token(self.consumer, 
             token=self.token, http_method=method, http_url=uri, 
