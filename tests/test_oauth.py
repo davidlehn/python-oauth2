@@ -1251,7 +1251,7 @@ class TestClient(unittest.TestCase):
 
         self.failUnlessEqual(mockReqConstructor.call_count, 1)
 
-        self.failUnless('extra=1' in mockHttpRequest.call_args[1]['parameters'])
+        self.failUnless('extra=1' in mockHttpRequest.call_args[1]['body'])
 
 if __name__ == "__main__":
     unittest.main()
