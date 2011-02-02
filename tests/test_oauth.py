@@ -1228,5 +1228,19 @@ class TestClient(unittest.TestCase):
         self.failUnless('multi=1' in mockHttpRequest.call_args[1]['body'])
         self.failUnless('multi=2' in mockHttpRequest.call_args[1]['body'])
 
+    @mock.patch('httplib2.Http.request')
+    @mock.patch('oauth2.Request.from_consumer_and_token')
+    def test_extra_request_parameters(self, mockReqConstructor, mockHttpRequest):
+        client = oauth.Client(self.consumer, None)
+
+        request = oauth.Request("GET", "http://example.com/fetch.php", parameters={'extra': ['1']})
+        mockReqConstructor.return_value = request
+
+        client.request('http://whatever', 'POST', parameters={'extra': ['1']})
+
+        self.failUnlessEqual(mockReqConstructor.call_count, 1)
+
+        self.failUnless('extra=1' in mockHttpRequest.call_args[1]['parameters'])
+
 if __name__ == "__main__":
     unittest.main()

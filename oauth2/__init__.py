@@ -32,6 +32,7 @@ import binascii
 import httplib2
 
 from urlparse import parse_qs
+from collections import defaultdict
 
 try:
     from hashlib import sha1
@@ -618,8 +619,9 @@ class Client(httplib2.Http):
             headers.get('Content-Type') == 'application/x-www-form-urlencoded'
 
         if is_form_encoded and body:
-            parameters = parameters or {}
-            parameters.update(parse_qs(body))
+            parameters = defaultdict(list, parameters or {})
+            for k, v in parse_qs(body).iteritems():
+                parameters[k].extend(v)
 
         req = Request.from_consumer_and_token(self.consumer, 
             token=self.token, http_method=method, http_url=uri, 
