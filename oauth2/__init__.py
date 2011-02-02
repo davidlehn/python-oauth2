@@ -619,6 +619,7 @@ class Client(httplib2.Http):
             headers.get('Content-Type') == 'application/x-www-form-urlencoded'
 
         if is_form_encoded and body:
+            # merge in body parameters and handle multiple values
             parameters = defaultdict(list, parameters or {})
             for k, v in parse_qs(body).iteritems():
                 parameters[k].extend(v)
