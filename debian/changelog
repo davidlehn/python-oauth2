@@ -1,3 +1,91 @@
+python-oauth2 (1.5.167) lucid; urgency=low
+
+  * UNRELEASED
+
+ -- SimpleGeo Nerds <nerds@simplegeo.com>  Thu, 17 Feb 2011 21:56:49 +0000
+
+python-oauth2 (1.5.166) lucid; urgency=low
+
+  [ Zooko Ofsimplegeo ]
+  * fix encoding of non-ascii data into postdata, really fixes #48 this
+    time (comes with test)
+
+  [ SimpleGeo Nerds ]
+
+ -- SimpleGeo Nerds <nerds@simplegeo.com>  Tue, 15 Feb 2011 17:23:00 +0000
+
+python-oauth2 (1.5.165) lucid; urgency=low
+
+  [ Zooko Ofsimplegeo ]
+  * get_normalized_parameters() is required to exclude any
+    oauth_signature that was already there, and it is required to
+    preserve duplicate keys, even with identical values ref #46, fixes
+    pull/49, thanks @zyegfryed
+
+  [ SimpleGeo Nerds ]
+
+ -- SimpleGeo Nerds <nerds@simplegeo.com>  Mon, 07 Feb 2011 19:24:56 +0000
+
+python-oauth2 (1.5.164) lucid; urgency=low
+
+  [ Zooko Ofsimplegeo ]
+  * make it actually inspect the request, and fix the test to require
+    the right things of the request ref #46, ref pull/49, thanks
+    @zyegfryed
+
+  [ SimpleGeo Nerds ]
+
+ -- SimpleGeo Nerds <nerds@simplegeo.com>  Mon, 07 Feb 2011 18:53:56 +0000
+
+python-oauth2 (1.5.163) lucid; urgency=low
+
+  [ Zooko Ofsimplegeo ]
+  * add test of #46; fixes #46
+
+  [ SimpleGeo Nerds ]
+
+ -- SimpleGeo Nerds <nerds@simplegeo.com>  Fri, 04 Feb 2011 18:14:56 +0000
+
+python-oauth2 (1.5.162) lucid; urgency=low
+
+  [ Zooko Ofsimplegeo ]
+  * import parse_qs from cgi if it can't be imported from urlparse, thus
+    regaining compatibility with Python 2.5 fixes #47 thanks to @vtsao,
+    @subsume, @worksology
+
+  [ SimpleGeo Nerds ]
+
+ -- SimpleGeo Nerds <nerds@simplegeo.com>  Fri, 04 Feb 2011 17:50:56 +0000
+
+python-oauth2 (1.5.161) lucid; urgency=low
+
+  [ Zooko Ofsimplegeo ]
+  * Include all parameters from URL, even ones that begin with "oauth_",
+    in signature base. effectively reverts
+    https://github.com/simplegeo/python-
+    oauth2/commit/50ca9578f598faff5427e58814e2f45d01d3261c fixes #27
+    Thanks to @robhudson for the bug report and help debugging.
+
+  [ SimpleGeo Nerds ]
+
+ -- SimpleGeo Nerds <nerds@simplegeo.com>  Thu, 03 Feb 2011 18:03:59 +0000
+
+python-oauth2 (1.5.160) lucid; urgency=low
+
+  [ Zooko Ofsimplegeo ]
+  * add another unicode test case to the tests just to show to user
+    saevarom on github
+
+  [ SimpleGeo Nerds ]
+
+ -- SimpleGeo Nerds <nerds@simplegeo.com>  Thu, 03 Feb 2011 00:01:55 +0000
+
+python-oauth2 (1.5.159) lucid; urgency=low
+
+  * UNRELEASED
+
+ -- SimpleGeo Nerds <nerds@simplegeo.com>  Thu, 03 Feb 2011 00:00:04 +0000
+
 python-oauth2 (1.5.158) lucid; urgency=low
 
   [ Zooko Ofsimplegeo ]

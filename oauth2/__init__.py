@@ -31,7 +31,12 @@ import hmac
 import binascii
 import httplib2
 
-from urlparse import parse_qs
+try:
+    from urlparse import parse_qs
+    parse_qs # placate pyflakes
+except ImportError:
+    # fall back for Python 2.5
+    from cgi import parse_qs
 from collections import defaultdict
 
 try:
@@ -131,11 +136,26 @@ def to_unicode_optional_iterator(x):
         assert 'is not iterable' in str(e)
         return x
     else:
-            return [ to_unicode(e) for e in l ]
+        return [ to_unicode(e) for e in l ]
+
+def to_utf8_optional_iterator(x):
+    """
+    Raise TypeError if x is a str or if x is an iterable which
+    contains a str.
+    """
+    if isinstance(x, basestring):
+        return to_utf8(x)
+
+    try:
+        l = list(x)
+    except TypeError, e:
+        assert 'is not iterable' in str(e)
+        return x
+    else:
+        return [ to_utf8_if_string(e) for e in l ]
 
 def escape(s):
     """Escape a URL including any /."""
-    s = to_unicode(s)
     return urllib.quote(s.encode('utf-8'), safe='~')
 
 def generate_timestamp():
@@ -382,10 +402,14 @@ class Request(dict):
  
     def to_postdata(self):
         """Serialize as post data for a POST request."""
+        d = {}
+        for k, v in self.iteritems():
+            d[k.encode('utf-8')] = to_utf8_optional_iterator(v)
+
         # tell urlencode to deal with sequence values and map them correctly
         # to resulting querystring. for example self["k"] = ["v1", "v2"] will
         # result in 'k=v1&k=v2' and not k=%5B%27v1%27%2C+%27v2%27%5D
-        return urllib.urlencode(self, True).replace('+', '%20')
+        return urllib.urlencode(d, True).replace('+', '%20')
  
     def to_url(self):
         """Serialize as a URL for a GET request."""
@@ -447,8 +471,8 @@ class Request(dict):
         query = urlparse.urlparse(self.url)[4]
 
         url_items = self._split_url_string(query).items()
-        non_oauth_url_items = list([(to_utf8(k), to_utf8(v)) for k, v in url_items  if not k.startswith('oauth_')])
-        items.extend(non_oauth_url_items)
+        url_items = [(to_utf8(k), to_utf8(v)) for k, v in url_items if k != 'oauth_signature' ]
+        items.extend(url_items)
 
         items.sort()
         encoded_str = urllib.urlencode(items)
@@ -646,8 +670,8 @@ class Client(httplib2.Http):
         else:
             headers.update(req.to_header(realm=realm))
 
-        return httplib2.Http.request(self, uri, method=method, body=body, 
-            headers=headers, redirections=redirections, 
+        return httplib2.Http.request(self, uri, method=method, body=body,
+            headers=headers, redirections=redirections,
             connection_type=connection_type)
 
 
@@ -785,7 +809,7 @@ class SignatureMethod(object):
 
 class SignatureMethod_HMAC_SHA1(SignatureMethod):
     name = 'HMAC-SHA1'
-        
+
     def signing_base(self, request, consumer, token):
         if not hasattr(request, 'normalized_url') or request.normalized_url is None:
             raise ValueError("Base URL for request is not set.")

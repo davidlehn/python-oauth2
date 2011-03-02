@@ -1,3 +1,5 @@
+﻿# -*- coding: utf-8 -*-
+
 """
 The MIT License
 
@@ -363,7 +365,8 @@ class TestRequest(unittest.TestCase, ReallyEqualMixin):
             u'bar': u'foo',
             u'multi': [u'FOO',u'BAR'],
             u'uni_utf8': u'\xae',
-            u'uni_unicode': u'\u00ae'
+            u'uni_unicode': u'\u00ae',
+            u'uni_unicode_2': u'åÅøØ',
         }
 
         params = oauth_params
@@ -404,6 +407,24 @@ class TestRequest(unittest.TestCase, ReallyEqualMixin):
 
         for key, val in res.items():
             self.assertEquals(val, params.get(key))
+
+    def test_to_postdata_nonascii(self):
+        realm = "http://sp.example.com/"
+
+        params = {
+            'nonasciithing': u'q\xbfu\xe9 ,aasp u?..a.s',
+            'oauth_version': "1.0",
+            'oauth_nonce': "4572616e48616d6d65724c61686176",
+            'oauth_timestamp': "137131200",
+            'oauth_consumer_key': "0685bd9184jfhq22",
+            'oauth_signature_method': "HMAC-SHA1",
+            'oauth_token': "ad180jjd733klru7",
+            'oauth_signature': "wOJIO9A2W5mFwDgiDvZbTSMK%2FPY%3D",
+        }
+
+        req = oauth.Request("GET", realm, params)
+
+        self.failUnlessReallyEqual(req.to_postdata(), 'nonasciithing=q%C2%BFu%C3%A9%20%2Caasp%20u%3F..a.s&oauth_nonce=4572616e48616d6d65724c61686176&oauth_timestamp=137131200&oauth_consumer_key=0685bd9184jfhq22&oauth_signature_method=HMAC-SHA1&oauth_version=1.0&oauth_token=ad180jjd733klru7&oauth_signature=wOJIO9A2W5mFwDgiDvZbTSMK%252FPY%253D')
 
     def test_to_postdata(self):
         realm = "http://sp.example.com/"
@@ -542,6 +563,49 @@ class TestRequest(unittest.TestCase, ReallyEqualMixin):
 
         self.assertEquals(expected, res)
 
+    def test_get_normalized_parameters_duplicate(self):
+        url = "http://example.com/v2/search/videos?oauth_nonce=79815175&oauth_timestamp=1295397962&oauth_consumer_key=mykey&oauth_signature_method=HMAC-SHA1&q=car&oauth_version=1.0&offset=10&oauth_signature=spWLI%2FGQjid7sQVd5%2FarahRxzJg%3D"
+
+        req = oauth.Request("GET", url)
+
+        res = req.get_normalized_parameters()
+
+        expected='oauth_consumer_key=mykey&oauth_nonce=79815175&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1295397962&oauth_version=1.0&offset=10&q=car'
+
+        self.assertEquals(expected, res)
+
+    def test_get_normalized_parameters_from_url(self):
+        # example copied from
+        # https://github.com/ciaranj/node-oauth/blob/master/tests/oauth.js
+        # which in turns says that it was copied from
+        # http://oauth.net/core/1.0/#sig_base_example .
+        url = "http://photos.example.net/photos?file=vacation.jpg&oauth_consumer_key=dpf43f3p2l4k3l03&oauth_nonce=kllo9940pd9333jh&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1191242096&oauth_token=nnch734d00sl2jdk&oauth_version=1.0&size=original"
+
+        req = oauth.Request("GET", url)
+
+        res = req.get_normalized_parameters()
+
+        expected = 'file=vacation.jpg&oauth_consumer_key=dpf43f3p2l4k3l03&oauth_nonce=kllo9940pd9333jh&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1191242096&oauth_token=nnch734d00sl2jdk&oauth_version=1.0&size=original'
+
+        self.assertEquals(expected, res)
+
+    def test_signing_base(self):
+        # example copied from
+        # https://github.com/ciaranj/node-oauth/blob/master/tests/oauth.js
+        # which in turns says that it was copied from
+        # http://oauth.net/core/1.0/#sig_base_example .
+        url = "http://photos.example.net/photos?file=vacation.jpg&oauth_consumer_key=dpf43f3p2l4k3l03&oauth_nonce=kllo9940pd9333jh&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1191242096&oauth_token=nnch734d00sl2jdk&oauth_version=1.0&size=original"
+
+        req = oauth.Request("GET", url)
+
+        sm = oauth.SignatureMethod_HMAC_SHA1()
+
+        consumer = oauth.Consumer('dpf43f3p2l4k3l03', 'foo')
+        key, raw = sm.signing_base(req, consumer, None)
+
+        expected = 'GET&http%3A%2F%2Fphotos.example.net%2Fphotos&file%3Dvacation.jpg%26oauth_consumer_key%3Ddpf43f3p2l4k3l03%26oauth_nonce%3Dkllo9940pd9333jh%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1191242096%26oauth_token%3Dnnch734d00sl2jdk%26oauth_version%3D1.0%26size%3Doriginal'
+        self.assertEquals(expected, raw)
+
     def test_get_normalized_parameters(self):
         url = "http://sp.example.com/"
 
@@ -553,6 +617,7 @@ class TestRequest(unittest.TestCase, ReallyEqualMixin):
             'oauth_signature_method': "HMAC-SHA1",
             'oauth_token': "ad180jjd733klru7",
             'multi': ['FOO','BAR', u'\u00ae', '\xc2\xae'],
+            'multi_same': ['FOO','FOO'],
             'uni_utf8_bytes': '\xc2\xae',
             'uni_unicode_object': u'\u00ae'
         }
@@ -561,7 +626,7 @@ class TestRequest(unittest.TestCase, ReallyEqualMixin):
 
         res = req.get_normalized_parameters()
 
-        expected='multi=BAR&multi=FOO&multi=%C2%AE&multi=%C2%AE&oauth_consumer_key=0685bd9184jfhq22&oauth_nonce=4572616e48616d6d65724c61686176&oauth_signature_method=HMAC-SHA1&oauth_timestamp=137131200&oauth_token=ad180jjd733klru7&oauth_version=1.0&uni_unicode_object=%C2%AE&uni_utf8_bytes=%C2%AE'
+        expected='multi=BAR&multi=FOO&multi=%C2%AE&multi=%C2%AE&multi_same=FOO&multi_same=FOO&oauth_consumer_key=0685bd9184jfhq22&oauth_nonce=4572616e48616d6d65724c61686176&oauth_signature_method=HMAC-SHA1&oauth_timestamp=137131200&oauth_token=ad180jjd733klru7&oauth_version=1.0&uni_unicode_object=%C2%AE&uni_utf8_bytes=%C2%AE'
 
         self.assertEquals(expected, res)
 
@@ -1200,9 +1265,8 @@ class TestClient(unittest.TestCase):
 
         def mockrequest(cl, ur, **kw):
             self.failUnless(cl is client)
-            self.failUnless(ur is uri)
             self.failUnlessEqual(frozenset(kw.keys()), frozenset(['method', 'body', 'redirections', 'connection_type', 'headers']))
-            self.failUnlessEqual(kw['body'], None)
+            self.failUnlessEqual(kw['body'], '')
             self.failUnlessEqual(kw['connection_type'], None)
             self.failUnlessEqual(kw['method'], 'GET')
             self.failUnlessEqual(kw['redirections'], httplib2.DEFAULT_MAX_REDIRECTS)
@@ -1212,7 +1276,7 @@ class TestClient(unittest.TestCase):
                     http_method='GET', http_url=uri, parameters={})
             req.sign_request(oauth.SignatureMethod_HMAC_SHA1(), self.consumer, None)
             expected = parse_qsl(urlparse.urlparse(req.to_url()).query)
-            actual = parse_qsl(urlparse.urlparse(url).query)
+            actual = parse_qsl(urlparse.urlparse(ur).query)
             self.failUnlessEqual(len(expected), len(actual))
             actual = dict(actual)
             for key, value in expected:
@@ -1220,6 +1284,8 @@ class TestClient(unittest.TestCase):
                     self.failUnlessEqual(actual[key], value)
 
             return random_result
+
+        mockHttpRequest.side_effect = mockrequest
 
         client.request(uri, 'GET')
 
